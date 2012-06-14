@@ -1,3 +1,12 @@
+/* ITSP 2012 - WnCC Summer Projects (Slot 1)
+ * Team ID: 1W06
+ * Team Name: Infinite Loop
+ * Project Name: Essence of Life
+ * Team Members: Ameya Behere(Leader)
+ *				 Alok Shah
+ *				 Ritesh Kakade
+*/
+
 /* Program for representing the simulation graphically
  * Note: Don't resize/move/alter the window. It causes the program to run
  * multiple times
@@ -35,14 +44,39 @@ class RunSimGraphic extends Canvas
 	{
 		int length = 42;
 		int breadth = 24;
-		int offsetX = 60;
-		int offsetY = 40;
+		int generationNum = 100;
+		int rabbitNum = 100;
+		int wolfNum = 70;
+		int offsetX = 50;
+		int offsetY = 35;
 		int grass[][] = new int[breadth][length];
 		int specie[][] = new int[breadth][length];
-		//Random r = new Random();
 
 		DataInputStream dataGrass;
 		DataInputStream dataSpecie;
+		DataInputStream dataDimension;
+
+		try
+		{
+			dataDimension = new DataInputStream(new FileInputStream("DimensionData"));
+		}catch(IOException exc) 
+		{
+			System.out.println("Cannot open file.");
+			return;
+		}
+
+		// Reading dimensions
+		try
+		{
+			length = dataDimension.readInt();
+			breadth = dataDimension.readInt();
+			generationNum = dataDimension.readInt();
+			rabbitNum = dataDimension.readInt();
+			wolfNum = dataDimension.readInt();
+		}catch(IOException exc)
+		{
+			System.out.println("Read Dimension error.");
+		}
 
 		try
 		{
@@ -64,7 +98,7 @@ class RunSimGraphic extends Canvas
 			return;
 		}
 
-		for(int generation = 0; generation < 100; generation++)
+		for(int generation = 0; generation < generationNum; generation++)
 		{
 			try
 			{
