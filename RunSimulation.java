@@ -1,7 +1,14 @@
-/* 
- * Tuesday May 22 2012 
- * Class Definitions required for our project
- * Numerous methods have been defined as well
+/* ITSP 2012 - WnCC Summer Projects (Slot 1)
+ * Team ID: 1W06
+ * Team Name: Infinite Loop
+ * Project Name: Essence of Life
+ * Team Members: Ameya Behere(Leader)
+ *				 Alok Shah
+ *				 Ritesh Kakade
+*/
+ 
+/* This program executes the simulation. All computation is done in this code.
+ * All data is recorded in binary files to be used by the other program.
 */
 
 import java.io.*;
@@ -235,7 +242,7 @@ class Organism
 		ageCur = 0;
 		foodMax = 100;
 		foodCur = 50 + r.nextInt(11);
-		foodReq = 20;
+		foodReq = 10;
 		socialMax = 100;
 		socialCur = 50;
 		socialReq = 15;
@@ -369,7 +376,7 @@ class Organism
 	boolean isHungry()
 	{
 		boolean flagHungry = true;
-		if(foodCur > 70)
+		if(foodCur > 80)
 			flagHungry = false;
 		return flagHungry;
 	}
@@ -1457,6 +1464,53 @@ class Universe extends Grid
 		}
 	}
 
+	// Newer method to grow the grass
+	// Under development
+	void calcGrassNew()
+	{
+		Random r = new Random();
+		for(int i=0; i<breadth; i++)
+		{
+			for(int j=0; j<length; j++)
+			{
+				if(grass[i][j] > 0)
+				{
+					grassNextGen[i][j]++;
+					if(grassNextGen[i][j] > maxGrass)
+						grassNextGen[i][j] = maxGrass;
+				}
+				else
+				{
+					int found = 0;
+					for(int p=i-1; p>=i+1; p++)
+					{
+						if(p<0 || p>=breadth)
+							continue;
+						for(int q=j-1; q >=j+1; j++)
+						{
+							if(q<0 || q>= length)
+								continue;
+							if(grass[p][q] > 0)
+							{
+								found++;
+							}
+						}
+					}
+					if(found == 2)
+					{
+						if(r.nextInt(9) == 0)
+							grassNextGen[i][j] = 1;
+					}
+					else
+					{
+						if(r.nextInt(20) == 0)
+						grassNextGen[i][j] = 1;
+					}
+				}
+			}
+		}
+	}
+
 	// Updates the grass to the calculated values
 	void updateGrass()
 	{
@@ -1750,16 +1804,74 @@ class RunSimulation
 {
 	public static void main(String args[]) throws IOException
 	{
-		Universe u = new Universe(42,24,2);
-		u.seedOrganismRandom(60,30);
-		u.seedGrassRandom(2);
+		int length = 42;
+		int breadth = 24;
+		int generationNum = 100;
+		int rabbitNum = 150;
+		int wolfNum = 120;
 		
+		if(args.length == 5)
+		{
+			try
+			{
+				length = Integer.parseInt(args[0]);
+				breadth = Integer.parseInt(args[1]);
+				generationNum = Integer.parseInt(args[2]);
+				rabbitNum = Integer.parseInt(args[3]);
+				wolfNum = Integer.parseInt(args[4]);
+			}
+			catch (NumberFormatException nfe)
+			{
+			  System.out.println("NumberFormatException: " + nfe.getMessage());
+			}
+		}
+		
+		if(length > 42)
+			length = 42;
+		if(breadth > 24)
+			breadth = 24;
+		if(generationNum > 200)
+			generationNum = 200;
+		if(rabbitNum > 300)
+			rabbitNum = 300;
+		if(wolfNum > 300)
+			wolfNum = 300;
+		
+		Universe u = new Universe(length,breadth,2);
+		u.seedOrganismRandom(rabbitNum,wolfNum);
+		u.seedGrassRandom(2);
+
+		DataOutputStream dataDimension;
 		DataOutputStream dataGrass;
 		DataOutputStream dataSpecie;
-		DataOutputStream dataOrganism;
 
 		FileWriter fw;
 		
+		// This file holds the command line parameters to be passed to the
+		// graphical counterpart of this code.
+		// Opening file
+		try
+		{
+			dataDimension = new DataOutputStream(new FileOutputStream("DimensionData"));
+		}catch(IOException exc) 
+		{
+			System.out.println("Cannot open file.");
+			return;
+		}
+		// Writing
+		try
+		{
+			dataDimension.writeInt(length); 			
+			dataDimension.writeInt(breadth);
+			dataDimension.writeInt(generationNum);
+			dataDimension.writeInt(rabbitNum);
+			dataDimension.writeInt(wolfNum);
+		}catch(IOException exc)
+		{
+			System.out.println("Write error.");
+		}
+		
+		// This file holds the grass matrix information
 		try
 		{
 			dataGrass = new DataOutputStream(new FileOutputStream("grassData"));
@@ -1768,7 +1880,8 @@ class RunSimulation
 			System.out.println("Cannot open file.");
 			return;
 		}
-		
+
+		// This file holds the creature matrix information
 		try
 		{
 			dataSpecie = new DataOutputStream(new FileOutputStream("specieData"));
@@ -1777,16 +1890,8 @@ class RunSimulation
 			System.out.println("Cannot open file.");
 			return;
 		}
-		
-		try
-		{
-			dataOrganism = new DataOutputStream(new FileOutputStream("organismData"));
-		}catch(IOException exc) 
-		{
-			System.out.println("Cannot open file.");
-			return;
-		}
 
+		// This file is a text log file summarising the simulation
 		try
 		{
 			fw = new FileWriter("Simulationlog.txt");
@@ -1804,7 +1909,7 @@ class RunSimulation
 			System.out.println("Write error.");
 		}
 	
-		for(int generation = 0; generation < 100; generation++)
+		for(int generation = 0; generation < generationNum; generation++)
 		{
 			try
 			{
@@ -1814,7 +1919,6 @@ class RunSimulation
 					{
 						dataGrass.writeInt(u.grass[i][j]);
 						dataSpecie.writeInt(u.specie[i][j]);
-						dataOrganism.writeLong(u.organism[i][j]);
 					}
 				}
 				fw.write("\r\nGeneration: " + generation);
@@ -1839,7 +1943,7 @@ class RunSimulation
 						
 		dataGrass.close();
 		dataSpecie.close();
-		dataOrganism.close();
+		dataDimension.close();
 
 		fw.close();
 			
